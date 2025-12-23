@@ -11,6 +11,7 @@ export interface ImageStats {
 export interface PointBuffer {
   positions: Float32Array;
   colors: Float32Array;
+  texturedColors?: Float32Array; // Stored separately to switch between grayscale and color mapping
 }
 
 export interface PointCloudData {
@@ -23,4 +24,5 @@ export interface ViewportSettings {
   depthScale: number;
   sampling: number;
   colorScheme: 'original' | 'depth' | 'plasma';
+  useColorImage: boolean;
 }

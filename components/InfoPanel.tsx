@@ -1,15 +1,16 @@
 
 import React from 'react';
 import { ImageStats, ViewportSettings } from '../types';
-import { Info, Box, LayoutGrid, Cpu, Image as ImageIcon } from 'lucide-react';
+import { Info, Box, LayoutGrid, Cpu, Image as ImageIcon, Palette } from 'lucide-react';
 
 interface InfoPanelProps {
   stats: ImageStats | null;
   settings: ViewportSettings;
   setSettings: React.Dispatch<React.SetStateAction<ViewportSettings>>;
+  hasColorMap: boolean;
 }
 
-const InfoPanel: React.FC<InfoPanelProps> = ({ stats, settings, setSettings }) => {
+const InfoPanel: React.FC<InfoPanelProps> = ({ stats, settings, setSettings, hasColorMap }) => {
   if (!stats) return null;
 
   return (
@@ -38,17 +39,38 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ stats, settings, setSettings }) =
           </div>
         </div>
 
+        {/* Color Mapping Toggle */}
+        <div className="bg-white/5 p-4 rounded-xl border border-white/5 space-y-3">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <Palette className={`w-3.5 h-3.5 ${settings.useColorImage ? 'text-indigo-400' : 'text-white/30'}`} />
+              <span className="text-[10px] text-white/60 uppercase font-bold tracking-wider">Color Mapping</span>
+            </div>
+            <button
+              onClick={() => setSettings(s => ({ ...s, useColorImage: !s.useColorImage }))}
+              className={`w-10 h-5 rounded-full relative transition-colors duration-300 ${settings.useColorImage ? 'bg-indigo-500' : 'bg-white/10'}`}
+            >
+              <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all duration-300 ${settings.useColorImage ? 'left-6' : 'left-1'}`} />
+            </button>
+          </div>
+          {settings.useColorImage && !hasColorMap && (
+            <p className="text-[9px] text-indigo-300/60 leading-tight">Waiting for color image upload...</p>
+          )}
+          {settings.useColorImage && hasColorMap && (
+            <p className="text-[9px] text-emerald-400/60 font-medium">Texture mapping active</p>
+          )}
+        </div>
+
         <div className="bg-white/5 p-4 rounded-xl border border-white/5">
            <div className="flex justify-between items-center mb-1">
-              <span className="text-[10px] text-white/40 uppercase font-medium">Filename</span>
+              <span className="text-[10px] text-white/40 uppercase font-medium">Depth File</span>
               <ImageIcon className="w-3 h-3 text-white/30" />
            </div>
            <p className="text-xs text-white/80 truncate font-medium">{stats.name}</p>
-           <p className="text-[10px] text-white/40 mt-1">{stats.size}</p>
         </div>
       </div>
 
-      <div className="space-y-4 pt-2">
+      <div className="space-y-4 pt-2 border-t border-white/5">
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <label className="text-[10px] text-white/40 uppercase font-bold tracking-widest">Point Size</label>

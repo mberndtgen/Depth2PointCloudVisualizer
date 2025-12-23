@@ -14,11 +14,16 @@ const Cloud: React.FC<{ buffer: PointBuffer; settings: ViewportSettings; interac
   const geometry = useMemo(() => {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(buffer.positions, 3));
-    geo.setAttribute('color', new THREE.BufferAttribute(buffer.colors, 3));
+    
+    // Choose between textured and grayscale colors
+    const activeColors = (settings.useColorImage && !interacting && buffer.texturedColors) 
+      ? buffer.texturedColors 
+      : buffer.colors;
+      
+    geo.setAttribute('color', new THREE.BufferAttribute(activeColors, 3));
     return geo;
-  }, [buffer]);
+  }, [buffer, settings.useColorImage, interacting]);
 
-  // Adjust point size slightly during interaction to fill gaps in low-res mode
   const currentPointSize = interacting ? settings.pointSize * 1.5 : settings.pointSize;
 
   return (
@@ -45,7 +50,6 @@ const PointCloudView: React.FC<PointCloudViewProps> = ({ data, settings }) => {
   };
 
   const handleInteractionEnd = () => {
-    // Small delay before switching back to full resolution for smoother feel
     interactionTimeout.current = window.setTimeout(() => {
       setIsInteracting(false);
     }, 150);
@@ -99,8 +103,11 @@ const PointCloudView: React.FC<PointCloudViewProps> = ({ data, settings }) => {
       </div>
 
       {!isInteracting && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none animate-in fade-in duration-700">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none animate-in fade-in duration-700 flex flex-col items-center gap-1">
             <span className="text-[9px] uppercase tracking-[0.3em] text-emerald-500/60 font-black">Full Resolution Rendered</span>
+            {settings.useColorImage && data.full.texturedColors && (
+               <span className="text-[8px] uppercase tracking-[0.2em] text-indigo-400 font-bold">Color Mapping Enabled</span>
+            )}
         </div>
       )}
     </div>

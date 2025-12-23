@@ -9,6 +9,28 @@ export const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
+export const extractPointColors = (
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+  sampling: number
+): Float32Array => {
+  const step = Math.max(1, sampling);
+  const count = Math.ceil(width / step) * Math.ceil(height / step);
+  const colors = new Float32Array(count * 3);
+  let cIdx = 0;
+
+  for (let y = 0; y < height; y += step) {
+    for (let x = 0; x < width; x += step) {
+      const i = (y * width + x) * 4;
+      colors[cIdx++] = data[i] / 255;
+      colors[cIdx++] = data[i + 1] / 255;
+      colors[cIdx++] = data[i + 2] / 255;
+    }
+  }
+  return colors;
+};
+
 const extractPoints = (
   data: Uint8ClampedArray,
   width: number,
@@ -54,29 +76,33 @@ const extractPoints = (
   };
 };
 
+export const getImageData = (img: HTMLImageElement): { data: Uint8ClampedArray; width: number; height: number } => {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx) throw new Error('Could not create canvas context');
+  canvas.width = img.width;
+  canvas.height = img.height;
+  ctx.drawImage(img, 0, 0);
+  return {
+    data: ctx.getImageData(0, 0, img.width, img.height).data,
+    width: img.width,
+    height: img.height
+  };
+};
+
 export const processDepthMap = async (
   img: HTMLImageElement,
   depthScale: number = 60
 ): Promise<PointCloudData> => {
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  
-  if (!ctx) throw new Error('Could not create canvas context');
-
-  canvas.width = img.width;
-  canvas.height = img.height;
-  ctx.drawImage(img, 0, 0);
-
-  const imageData = ctx.getImageData(0, 0, img.width, img.height);
-  const data = imageData.data;
+  const { data, width, height } = getImageData(img);
   
   // Full resolution (or slightly sampled if huge)
-  const fullSampling = (img.width * img.height) > 1000000 ? 2 : 1;
-  const full = extractPoints(data, img.width, img.height, fullSampling, depthScale);
+  const fullSampling = (width * height) > 1000000 ? 2 : 1;
+  const full = extractPoints(data, width, height, fullSampling, depthScale);
   
   // Low resolution preview (aggressive sampling for high performance during interaction)
   const previewSampling = Math.max(fullSampling * 4, 8);
-  const preview = extractPoints(data, img.width, img.height, previewSampling, depthScale);
+  const preview = extractPoints(data, width, height, previewSampling, depthScale);
 
   return { full, preview };
 };
