@@ -1,0 +1,5 @@
+{
+  "name": "Depth-to-Point-Cloud Visualizer",
+  "description": "A high-performance 3D visualization tool that converts 2D depth map PNGs into interactive point clouds using Three.js and React Fiber.",
+  "requestFramePermissions": []
+}
